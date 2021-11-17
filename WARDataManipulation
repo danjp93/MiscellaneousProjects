@@ -1,0 +1,59 @@
+#1 import libraries
+
+library(tidyverse)
+library(ggplot2)
+library(baseballr)
+library(corrplot)
+library(lubridate)
+library(IDPmisc)
+
+#Load 3 years FIP data
+# FanGraphs WARleaders page, https://www.fangraphs.com/warleaders.aspx?season=2021&team=all
+
+players2021 <- read.csv("C:/Users/~FIPWAR2021.csv")%>%
+  rename(Name = ï..Name,WAR2021 = Total.WAR) %>%
+  mutate(rank21 = dense_rank(desc(WAR2021))
+  ) %>%
+  select(Name,Pos,playerid, rank21, WAR2021)
+
+players2020 <- read.csv("C:/Users/~/FIPWAR2020.csv")%>%
+  rename(Name = ï..Name,WAR2020 = Total.WAR) %>%
+  mutate(rank20 = dense_rank(desc(WAR2020))
+  ) %>%
+  select(playerid, rank20, WAR2020)
+
+players2019 <- read.csv("C:/Users/~/FIPWAR2019.csv")%>%
+  rename(Name = ï..Name,WAR2019 = Total.WAR) %>%
+  mutate(rank19 = dense_rank(desc(WAR2019))
+  ) %>%
+  select(Name, playerid,rank19, WAR2019)
+
+WAROne <- players2019 %>%
+  inner_join(players2020, by=("playerid"))
+
+WARFinal <- WAROne %>%
+  inner_join(players2021, by=("playerid")) %>%
+  mutate(rankchange = rank19 - rank21,
+         warchange = (WAR2021 - WAR2019)/WAR2019,
+         playerid = as.character(playerid))
+
+
+# Getting Age info
+# https://www.smartfantasybaseball.com/tools/
+
+playerids <- read.csv("C:/Users/danjp/~/SFBB-Player-ID-Map.csv")%>%
+  rename(playerid = IDFANGRAPHS) %>%
+  mutate(age1 = as.Date(parse_date_time(BIRTHDATE, c('mdy', 'HMS'))),
+         age2021 = trunc(as.numeric(difftime("2021-7-19",age1, units = "weeks"))/52.25),
+         age2019 = age2021 - 2,
+         age2025 = age2021 + 4) %>%
+  select(playerid,age2021,age2019)
+
+
+#Identifying Top 15 newcomers 2025
+
+WARFinal2 <- WARFinal %>%
+  inner_join(playerids, by=("playerid")) %>%
+  distinct() %>%
+  select(Name,Pos,rank21, age2021, rankchange, warchange) %>%
+  filter(age2021 < 25, rank21 < 51)
