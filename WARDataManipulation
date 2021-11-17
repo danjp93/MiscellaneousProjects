@@ -14,7 +14,7 @@ players2021 <- read.csv("C:/Users/~FIPWAR2021.csv")%>%
   rename(Name = ï..Name,WAR2021 = Total.WAR) %>%
   mutate(rank21 = dense_rank(desc(WAR2021))
   ) %>%
-  select(Name,Pos,playerid, rank21, WAR2021)
+  select(Pos,playerid, rank21, WAR2021)
 
 players2020 <- read.csv("C:/Users/~/FIPWAR2020.csv")%>%
   rename(Name = ï..Name,WAR2020 = Total.WAR) %>%
